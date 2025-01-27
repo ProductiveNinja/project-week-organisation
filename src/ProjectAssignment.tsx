@@ -7,7 +7,9 @@ import { StudentSignup } from "./types/StudentSignup.ts";
 import { EditAssigmentModal } from "./EditAssigmentModal.tsx";
 import { OverrideAssignmentTable } from "./OverrideAssignmentTable.tsx";
 
-type Props = {} & UseData;
+type Props = {
+  continueCallback: () => void;
+} & UseData;
 
 export const ProjectAssignment: React.FC<Props> = ({
   projects,
@@ -16,6 +18,7 @@ export const ProjectAssignment: React.FC<Props> = ({
   setAssignments,
   overrideAssigments,
   setOverrideAssigments,
+  continueCallback,
 }) => {
   const [selectedAssigmentIndex, setSelectedAssignmentIndex] = useState(0);
   const [editSignup, setEditSignup] = useState<StudentSignup | null>(null);
@@ -89,7 +92,7 @@ export const ProjectAssignment: React.FC<Props> = ({
                 )
               }
             >
-              Vorherige
+              Vorheriges Projekt
             </button>
             <button
               className="btn btn-light"
@@ -100,11 +103,14 @@ export const ProjectAssignment: React.FC<Props> = ({
                 )
               }
             >
-              Nächste
+              Nächstes Projekt
             </button>
             <p>
               ({selectedAssigmentIndex + 1} / {assignments.length})
             </p>
+            <button className="btn btn-primary" onClick={continueCallback}>
+              Weiter
+            </button>
           </div>
           <div className="w-100 mt-3">
             {assignments[selectedAssigmentIndex] && (

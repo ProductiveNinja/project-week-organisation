@@ -8,6 +8,7 @@ import { useCSVMapper } from "./hooks/useCsvMapper.ts";
 import { useData } from "./hooks/useData.ts";
 import { Student } from "./types/Student.ts";
 import { ProjectAssignment } from "./ProjectAssignment.tsx";
+import { Summary } from "./Summary.tsx";
 
 type ProcessStep = {
   title: string;
@@ -25,6 +26,9 @@ const processSteps: ProcessStep[] = [
   },
   {
     title: "Projekteinteilung",
+  },
+  {
+    title: "Zusammenfassung",
   },
 ];
 
@@ -104,11 +108,12 @@ export const App: React.FC = () => {
               }}
             ></div>
           </div>
-          <div className="row align-items-center my-2 mx-3">
+          <div className="d-flex my-2 mx-3">
             {processSteps.map((step, i) => (
               <div
                 key={i}
-                className="col-3 d-flex justify-content-center fw-bold clickable"
+                className="d-flex justify-content-center fw-bold clickable"
+                style={{ width: `${100 / processSteps.length}%` }}
                 onClick={() => {
                   if (i <= completedStepIndex) setCurrentStepIndex(i);
                 }}
@@ -207,7 +212,11 @@ export const App: React.FC = () => {
                 itemMapCallback={(row) => mapSignupRow(row)}
                 continueCallback={() => setCurrentStepIndex((prev) => prev + 1)}
               />,
-              <ProjectAssignment {...data} />,
+              <ProjectAssignment
+                {...data}
+                continueCallback={() => setCurrentStepIndex((prev) => prev + 1)}
+              />,
+              <Summary {...data} />,
             ][currentStepIndex]
           }
         </main>
