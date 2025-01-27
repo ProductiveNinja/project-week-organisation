@@ -35,6 +35,7 @@ const processSteps: ProcessStep[] = [
 export const App: React.FC = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedStepIndex, setCompletedStepIndex] = useState(0);
+  const [processCompleted, setProcessCompleted] = useState(false);
 
   const useAlertHook = useAlert();
   const { alert, setAlert } = useAlertHook;
@@ -82,7 +83,7 @@ export const App: React.FC = () => {
     <div className="w-100 h-100">
       <AlertContext.Provider value={useAlertHook}>
         <nav className="w-full d-flex justify-content-between align-items-center px-3 gap-3">
-          <h3>Projektwoche</h3>
+          <h3>Projektwoche planen</h3>
           {(projects.length > 0 ||
             students.length > 0 ||
             signups.length > 0) && (
@@ -90,7 +91,7 @@ export const App: React.FC = () => {
               className="btn btn-danger"
               onClick={() => deleteCachedData()}
             >
-              Gespeicherte Daten löschen
+              Lokal gespeicherte Daten löschen
             </button>
           )}
         </nav>
@@ -101,7 +102,9 @@ export const App: React.FC = () => {
               role="progressbar"
               style={{
                 width: `${
-                  currentStepIndex === 0
+                  processCompleted
+                    ? 100
+                    : currentStepIndex === 0
                     ? 1
                     : (currentStepIndex / processSteps.length) * 100
                 }%`,
@@ -138,6 +141,8 @@ export const App: React.FC = () => {
                 title="Projekte importieren"
                 tableTitle="Projekte"
                 tableHeaders={["Projekt Nr.", "Titel", "Max. Teilnehmer:innen"]}
+                exampleCsvFile="projects.csv"
+                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert. Die Reihenfolge der Spalten ist irrelevant."
                 items={projects}
                 setItems={(items) => {
                   setProjects(items);
@@ -161,6 +166,9 @@ export const App: React.FC = () => {
                 setItems={(items) => {
                   setStudents(items);
                 }}
+                exampleCsvFile="students.csv"
+                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert. Die Reihenfolge der Spalten ist irrelevant. Weitere Vornamen werden ignoriert. Die Schüler werden anhand von ihrem Vor- und Nachnamen mit den Anmeldungen korrelliert. Stelle sicher, dass diese übereinstimmen. Sonderzeichen wie 
+              'äüöéàèê' werden automatisch umgewandelt."
                 renderListItem={(student: Student) => (
                   <>
                     <td>{student.className}</td>
@@ -183,9 +191,31 @@ export const App: React.FC = () => {
                 ]}
                 items={signups}
                 setItems={(items) => setSignups(items)}
+                exampleCsvFile="signups.csv"
+                hint={
+                  <div className="d-flex">
+                    <p className="text-muted">
+                      Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile
+                      wird ignoriert. Die Reihenfolge der Spalten ist
+                      irrelevant. Die Anmeldungen können in diesem Format aus
+                      einer Microsoft-Forms umfrage exportiert werden (siehe
+                      Screenshot). Jede Antwortmöglichkeit MUSS im Format{" "}
+                      <strong>"Projekt (nr) - (Titel)"</strong> sein, ansonsten
+                      können die Projekte nicht zugeordnet werden.
+                    </p>
+                    <img
+                      src="/forms-sample.png"
+                      alt="Forms Sample"
+                      className="clickable"
+                      title="In Grossansicht öffnen"
+                      onClick={() => window.open("/forms-sample.png")}
+                      width={200}
+                      height={250}
+                    />
+                  </div>
+                }
                 renderListItem={({
                   id,
-                  email,
                   name,
                   linkedStudent,
                   projectsPriority,
@@ -216,7 +246,10 @@ export const App: React.FC = () => {
                 {...data}
                 continueCallback={() => setCurrentStepIndex((prev) => prev + 1)}
               />,
-              <Summary {...data} />,
+              <Summary
+                {...data}
+                downloadCallback={() => setProcessCompleted(true)}
+              />,
             ][currentStepIndex]
           }
         </main>

@@ -5,9 +5,11 @@ import * as XLSX from "xlsx/xlsx.mjs";
 import { StudentSignup } from "./types/StudentSignup";
 import * as moment from "moment";
 
-type Props = {} & UseData;
+type Props = {
+  downloadCallback: () => void;
+} & UseData;
 
-export const Summary: React.FC<Props> = ({ assignments }) => {
+export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
   const exportGroupedByClass = () => {
     const groupedByClassList: {
       [key: string]: Array<{ signup: StudentSignup; project: string }>;
@@ -74,6 +76,8 @@ export const Summary: React.FC<Props> = ({ assignments }) => {
       workbook,
       `${moment().format("DD-MM-YYYY-HH-MM")}_Projektwoche_Klassenlisten.xlsx`
     );
+
+    downloadCallback();
   };
 
   const exportGroupedByProject = () => {
@@ -137,6 +141,8 @@ export const Summary: React.FC<Props> = ({ assignments }) => {
       workbook,
       `${moment().format("DD-MM-YYYY-HH-MM")}_Projektwoche_Projektlisten.xlsx`
     );
+
+    downloadCallback();
   };
 
   return (

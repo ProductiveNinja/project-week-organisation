@@ -33,6 +33,8 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     const normalizeName = (name: string) => {
       return name
         .split(" ")[0]
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]/gi, "")
         .toLowerCase();
     };
