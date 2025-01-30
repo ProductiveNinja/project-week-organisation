@@ -26,7 +26,7 @@ export const useCSVMapper = () => {
   const mapSignupRow = (row: any[]): StudentSignup | null => {
     if (!row[6]) return null;
 
-    const projectsPriority = row[6].split(";").map((project) => {
+    const projectsPriority = row.slice(6).map((project) => {
       const match = project.match(/Projekt (\d+) - (.+)/);
       return {
         id: match ? parseInt(match[1]) : 0,

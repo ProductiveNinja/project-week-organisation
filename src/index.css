@@ -33,3 +33,7 @@ a:hover {
 .clickable:hover {
   cursor: pointer;
 }
+
+.scroll-disabled {
+  overflow: hidden;
+}

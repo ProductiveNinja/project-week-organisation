@@ -1,6 +1,7 @@
 import React from "react";
 import { Table } from "react-bootstrap";
 import CSVReader from "react-csv-reader";
+import { toStaticFileUrl } from "./util.ts";
 
 type Props = {
   title: string;
@@ -40,7 +41,7 @@ export const CSVImporter: React.FC<Props> = ({
 
   const downloadExampleCsv = () => {
     const link = document.createElement("a");
-    link.setAttribute("href", `/${exampleCsvFile}`);
+    link.setAttribute("href", toStaticFileUrl(exampleCsvFile));
     link.setAttribute("download", exampleCsvFile);
 
     document.body.appendChild(link);
@@ -53,8 +54,8 @@ export const CSVImporter: React.FC<Props> = ({
   return (
     <div className="w-100 h-auto d-flex flex-column gap-4">
       <h1>{title}</h1>
-      <div className="row">
-        <div className="col-6 d-flex align-items-start gap-3">
+      <div className="row gap-3">
+        <div className="col-12 d-flex align-items-start gap-3">
           <CSVReader
             cssClass="csv-reader-input"
             onFileLoaded={(data) => handleImport(data)}
@@ -69,10 +70,10 @@ export const CSVImporter: React.FC<Props> = ({
             onClick={() => downloadExampleCsv()}
           >
             Beispieldatei herunterladen{" "}
-            <i className="bi bi-cloud-arrow-down"></i>
+            <i className="bi bi-download"></i>
           </button>
         </div>
-        <div className="col-6">
+        <div className="col-12">
           {typeof hint === "string" ? (
             <p className="text-muted">{hint}</p>
           ) : (

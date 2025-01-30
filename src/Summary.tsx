@@ -179,13 +179,13 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
             className="btn btn-success"
             onClick={() => exportGroupedByClass()}
           >
-            Nach Klassen eingeteilt <i className="bi bi-cloud-arrow-down"></i>
+            Nach Klassen eingeteilt <i className="bi bi-download"></i>
           </button>
           <button
             className="btn btn-success"
             onClick={() => exportGroupedByProject()}
           >
-            Nach Projekten eingeteilt <i className="bi bi-cloud-arrow-down"></i>
+            Nach Projekten eingeteilt <i className="bi bi-download"></i>
           </button>
         </div>
       </div>

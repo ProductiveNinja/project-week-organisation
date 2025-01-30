@@ -11,6 +11,7 @@ export const useLocalStorageValue = <T>(key: string, initialState?: T) => {
 
   const deleteState = () => {
     localStorage.removeItem(key);
+    if (initialState) setState(initialState);
   };
 
   useEffect(() => {

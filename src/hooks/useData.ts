@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { StudentSignup } from "../types/StudentSignup.ts";
 import { Student } from "../types/Student.ts";
 import { Project } from "../types/Project.ts";
@@ -8,6 +8,8 @@ import {
 } from "../types/ProjectAssignment.ts";
 import { UseAlert } from "./useAlert.ts";
 import { useLocalStorageValue } from "./useLocalStorageValue.ts";
+import { normalizeName } from "../util.ts";
+import * as moment from "moment";
 
 export const useData = (setAlert: UseAlert["setAlert"]) => {
   const [projects, setProjects, deleteProjects] = useLocalStorageValue<
@@ -30,15 +32,6 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     useLocalStorageValue<OverrideAssignment[]>("overrideAssigments", []);
 
   const linkStudentsToSignups = () => {
-    const normalizeName = (name: string) => {
-      return name
-        .split(" ")[0]
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/gi, "")
-        .toLowerCase();
-    };
-
     const newSignups = signups.map((signup) => {
       const linkedStudent = students.find(
         (student) =>
@@ -64,6 +57,19 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     setSignups(newSignups);
   };
 
+  const missingStudents = useMemo(
+    () =>
+      students.filter(
+        (student) =>
+          !signups.find(
+            (signup) =>
+              signup.linkedStudent?.firstName === student.firstName &&
+              signup.linkedStudent?.lastName === student.lastName
+          )
+      ),
+    [signups, students]
+  );
+
   useEffect(() => {
     if (
       !students.length ||
@@ -75,6 +81,57 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signups]);
 
+  const downloadData = () => {
+    const data = {
+      projects,
+      students,
+      signups,
+      overrideAssigments,
+    };
+
+    const blob = new Blob([JSON.stringify(data)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${moment().format(
+      "DD-MM-YYYY-HH-mm"
+    )}_projektwoche_export.json`;
+    a.click();
+
+    setAlert({
+      message: "Export erfolgreich heruntergeladen",
+      type: "success",
+    });
+  };
+
+  const uploadData = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      setProjects(data.projects || []);
+      setStudents(data.students || []);
+      setSignups(data.signups || []);
+      setAssignments(data.assignments || []);
+      setOverrideAssigments(data.overrideAssigments || []);
+
+      setAlert({
+        message: "Daten erfolgreich geladen",
+        type: "success",
+      });
+    };
+
+    input.click();
+  };
+
   return {
     projects,
     setProjects,
@@ -83,6 +140,7 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     setStudents,
     deleteStudents,
     signups,
+    missingStudents,
     setSignups,
     deleteSignups,
     assignments,
@@ -91,6 +149,9 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     overrideAssigments,
     setOverrideAssigments,
     deleteOverrideAssigments,
+    linkStudentsToSignups,
+    downloadData,
+    uploadData,
   };
 };
 

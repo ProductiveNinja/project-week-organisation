@@ -12,6 +12,8 @@ export const ProjectAssignmentTable: React.FC<Props> = ({
   assignment,
   editCallback,
 }) => {
+  if (!assignment.studentSignups) return null;
+
   return (
     <div
       className="w-100 d-flex flex-column gap-2 mx-auto"

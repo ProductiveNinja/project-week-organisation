@@ -19,8 +19,8 @@ export const OverrideAssignmentTable: React.FC<Props> = ({
   setOverrideAssignments,
 }) => {
   return (
-    <div className="d-flex flex-column gap-3">
-      <h2>Manuelle Änderungen</h2>
+    <div className="d-flex flex-column gap-2">
+      <h3>Manuelle Änderungen</h3>
       <div className="w-full">
         <Table striped bordered hover>
           <thead>

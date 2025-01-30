@@ -9,6 +9,9 @@ import { useData } from "./hooks/useData.ts";
 import { Student } from "./types/Student.ts";
 import { ProjectAssignment } from "./ProjectAssignment.tsx";
 import { Summary } from "./Summary.tsx";
+import { toStaticFileUrl } from "./util.ts";
+import { StudentSignup } from "./types/StudentSignup.ts";
+import { EditPriorityModal } from "./EditPriorityModal.tsx";
 
 type ProcessStep = {
   title: string;
@@ -36,12 +39,17 @@ export const App: React.FC = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedStepIndex, setCompletedStepIndex] = useState(0);
   const [processCompleted, setProcessCompleted] = useState(false);
+  const [editProjectPriority, setEditProjectPriority] = useState<{
+    signup: StudentSignup;
+    priorityIndex: number;
+  } | null>(null);
 
   const useAlertHook = useAlert();
   const { alert, setAlert } = useAlertHook;
 
   const { mapProjectRow, mapStudentRow, mapSignupRow } = useCSVMapper();
   const data = useData(setAlert);
+
   const {
     projects,
     setProjects,
@@ -54,6 +62,8 @@ export const App: React.FC = () => {
     deleteSignups,
     deleteAssignments,
     deleteOverrideAssigments,
+    downloadData,
+    uploadData,
   } = data;
 
   const deleteCachedData = () => {
@@ -79,21 +89,42 @@ export const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepIndex]);
 
+  const hasSavedData =
+    projects.length > 0 || students.length > 0 || signups.length > 0;
+
   return (
     <div className="w-100 h-100">
       <AlertContext.Provider value={useAlertHook}>
         <nav className="w-full d-flex justify-content-between align-items-center px-3 gap-3">
           <h3>Projektwoche planen</h3>
-          {(projects.length > 0 ||
-            students.length > 0 ||
-            signups.length > 0) && (
-            <button
-              className="btn btn-danger"
-              onClick={() => deleteCachedData()}
-            >
-              Lokal gespeicherte Daten löschen
-            </button>
-          )}
+          <div className="d-flex gap-3">
+            {!hasSavedData && (
+              <button
+                className="btn btn-secondary d-flex gap-2"
+                onClick={() => uploadData()}
+              >
+                Vorherigen Export importieren
+                <i className="bi bi-upload"></i>
+              </button>
+            )}
+            {hasSavedData && (
+              <button
+                className="btn btn-secondary d-flex gap-2"
+                onClick={() => downloadData()}
+              >
+                Lokale Daten exportieren
+                <i className="bi bi-download"></i>
+              </button>
+            )}
+            {hasSavedData && (
+              <button
+                className="btn btn-danger"
+                onClick={() => deleteCachedData()}
+              >
+                Lokal gespeicherte Daten löschen
+              </button>
+            )}
+          </div>
         </nav>
         <div className="w-full mb-4">
           <div className="progress mx-3">
@@ -134,6 +165,31 @@ export const App: React.FC = () => {
               </div>
             )}
           </div>
+
+          {editProjectPriority && (
+            <EditPriorityModal
+              {...editProjectPriority}
+              projects={projects}
+              projectPriorityCallback={(project) =>
+                setSignups((prev) =>
+                  prev.map((signup) =>
+                    signup.id === editProjectPriority?.signup.id
+                      ? {
+                          ...signup,
+                          projectsPriority: signup.projectsPriority.map(
+                            (p, i) =>
+                              i === editProjectPriority?.priorityIndex
+                                ? project
+                                : p
+                          ),
+                        }
+                      : signup
+                  )
+                )
+              }
+              onClose={() => setEditProjectPriority(null)}
+            />
+          )}
           {
             [
               <CSVImporter
@@ -142,7 +198,7 @@ export const App: React.FC = () => {
                 tableTitle="Projekte"
                 tableHeaders={["Projekt Nr.", "Titel", "Max. Teilnehmer:innen"]}
                 exampleCsvFile="projects.csv"
-                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert. Die Reihenfolge der Spalten ist irrelevant."
+                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert."
                 items={projects}
                 setItems={(items) => {
                   setProjects(items);
@@ -167,7 +223,7 @@ export const App: React.FC = () => {
                   setStudents(items);
                 }}
                 exampleCsvFile="students.csv"
-                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert. Die Reihenfolge der Spalten ist irrelevant. Weitere Vornamen werden ignoriert. Die Schüler werden anhand von ihrem Vor- und Nachnamen mit den Anmeldungen korrelliert. Stelle sicher, dass diese übereinstimmen. Sonderzeichen wie 
+                hint="Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile wird ignoriert. Weitere Vornamen werden ignoriert. Die Schüler werden anhand von ihrem Vor- und Nachnamen mit den Anmeldungen korrelliert. Stelle sicher, dass diese übereinstimmen. Sonderzeichen wie 
               'äüöéàèê' werden automatisch umgewandelt."
                 renderListItem={(student: Student) => (
                   <>
@@ -196,29 +252,35 @@ export const App: React.FC = () => {
                   <div className="d-flex">
                     <p className="text-muted">
                       Es muss eine CSV-Datei hochgeladen werden. Die erste Zeile
-                      wird ignoriert. Die Reihenfolge der Spalten ist
-                      irrelevant. Die Anmeldungen können in diesem Format aus
-                      einer Microsoft-Forms umfrage exportiert werden (siehe
+                      wird ignoriert. Die Anmeldungen können in diesem Format
+                      aus einer Microsoft-Forms umfrage exportiert werden (siehe
                       Screenshot). Jede Antwortmöglichkeit MUSS im Format{" "}
                       <strong>"Projekt (nr) - (Titel)"</strong> sein, ansonsten
-                      können die Projekte nicht zugeordnet werden.
+                      können die Projekte nicht zugeordnet werden. Rot
+                      eingefärbte Prioritäten sind doppelt gewählte Projekte.
+                      Per Klick kannst du die Priorität ändern.
                     </p>
                     <img
-                      src="/forms-sample.png"
+                      src={toStaticFileUrl("forms-sample.png")}
                       alt="Forms Sample"
                       className="clickable"
                       title="In Grossansicht öffnen"
-                      onClick={() => window.open("/forms-sample.png")}
+                      onClick={() =>
+                        window.open(toStaticFileUrl("forms-sample.png"))
+                      }
                       width={200}
-                      height={250}
+                      height={210}
                     />
                   </div>
                 }
                 renderListItem={({
                   id,
                   name,
+                  email,
                   linkedStudent,
                   projectsPriority,
+                  createdAt,
+                  finishedAt,
                 }) => (
                   <>
                     <td>{id}</td>
@@ -228,15 +290,42 @@ export const App: React.FC = () => {
                         ? `${linkedStudent.firstName} ${linkedStudent.lastName}`
                         : name}
                     </td>
-                    {projectsPriority.map((project, i) => (
-                      <td
-                        key={i}
-                        className="text-truncate"
-                        style={{ maxWidth: 200 }}
-                      >
-                        {project.title}
-                      </td>
-                    ))}
+                    {projectsPriority.map((project, i) => {
+                      const isDuplicate =
+                        i !== 0 &&
+                        projectsPriority
+                          .slice(0, i)
+                          .some((p) => p.id === project.id);
+
+                      return (
+                        <td
+                          key={i}
+                          className="text-truncate clickable"
+                          style={{
+                            maxWidth: 200,
+                            backgroundColor: isDuplicate
+                              ? "#ff000055"
+                              : undefined,
+                          }}
+                          onClick={() => {
+                            setEditProjectPriority({
+                              signup: {
+                                id,
+                                name,
+                                email,
+                                linkedStudent,
+                                projectsPriority,
+                                createdAt,
+                                finishedAt,
+                              },
+                              priorityIndex: i,
+                            });
+                          }}
+                        >
+                          {project.title}
+                        </td>
+                      );
+                    })}
                   </>
                 )}
                 itemMapCallback={(row) => mapSignupRow(row)}
