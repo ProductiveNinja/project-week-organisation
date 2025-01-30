@@ -1,2 +1,2 @@
-ID,Startzeit,Fertigstellungszeit,E-Mail,Name,Zeitpunkt der letzten Aenderung,Ordne die Projekte nach deiner Priorit√§t nur die ersten drei werden beachtet
-1,23/01/2025 14:40,23/01/2025 14:40,max.mustermann@example.com,Max Mustermann,,Projekt 1- Beispielprojekt 1;Projekt 2 - Beispielprojekt 2;Projekt 3 - Beispielprojekt 3;Projekt 4 - Bespielprojekt 4
+ID,Startzeit,Fertigstellungszeit,E-Mail,Name,Zeitpunkt der letzten Aenderung,Priorit‰t 1,Priorit‰t 2,Priorit‰t 3,Priorit‰t 4
+1,23/01/2025 14:40,23/01/2025 14:40,max.mustermann@example.com,Max Mustermann,,Projekt 1- Beispielprojekt 1,Projekt 2 - Beispielprojekt 2,Projekt 3 - Beispielprojekt 3,Projekt 4 - Bespielprojekt 4
