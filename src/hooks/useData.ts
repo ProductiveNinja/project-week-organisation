@@ -36,12 +36,14 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
       const linkedStudent = students.find((student) => {
         const split = signup.name.split(" ");
 
-        const lastName = split.pop() ?? "";
-        const firstName = split.join(" ");
+        const lastName = split.pop() ?? "0";
+        const firstName = split[0];
 
         return (
-          normalizeName(student.firstName) === normalizeName(firstName) &&
-          normalizeName(student.lastName) === normalizeName(lastName)
+          normalizeName(student.firstName.split(" ")[0]) ===
+            normalizeName(firstName) &&
+          normalizeName(student.lastName.split(" ").pop() ?? "1") ===
+            normalizeName(lastName)
         );
       });
 
