@@ -8,6 +8,8 @@ type Props = {
   editCallback: (studentSignup: StudentSignup) => void;
 };
 
+const priorityIndexColorMap = ["#00FF00", "#FFA500", "#FF7F7F", "#FF0000"];
+
 export const ProjectAssignmentTable: React.FC<Props> = ({
   assignment,
   editCallback,
@@ -37,8 +39,16 @@ export const ProjectAssignmentTable: React.FC<Props> = ({
           </tr>
         </thead>
         <tbody>
+          {assignment.studentSignups.length === 0 && (
+            <tr>
+              <td colSpan={5}>Keine Anmeldungen</td>
+            </tr>
+          )}
           {assignment.studentSignups.map((signup, i) => {
             const { id, linkedStudent, name, projectsPriority } = signup;
+            const priorityIndex = projectsPriority.findIndex(
+              (p) => p.id === assignment.project.id
+            );
             return (
               <tr key={id}>
                 <td>{id}</td>
@@ -48,10 +58,12 @@ export const ProjectAssignmentTable: React.FC<Props> = ({
                     ? `${linkedStudent.firstName} ${linkedStudent.lastName}`
                     : name}
                 </td>
-                <td>
-                  {projectsPriority.findIndex(
-                    (p) => p.id === assignment.project.id
-                  ) + 1}
+                <td
+                  style={{
+                    backgroundColor: priorityIndexColorMap[priorityIndex],
+                  }}
+                >
+                  {priorityIndex + 1}
                 </td>
                 <td className="d-flex justify-content-center">
                   <button
