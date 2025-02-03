@@ -33,13 +33,17 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
 
   const linkStudentsToSignups = () => {
     const newSignups = signups.map((signup) => {
-      const linkedStudent = students.find(
-        (student) =>
-          normalizeName(student.firstName) ===
-            normalizeName(signup.name.split(" ")[0]) &&
-          normalizeName(student.lastName) ===
-            normalizeName(signup.name.split(" ")[1])
-      );
+      const linkedStudent = students.find((student) => {
+        const split = signup.name.split(" ");
+
+        const lastName = split.pop() ?? "";
+        const firstName = split.join(" ");
+
+        return (
+          normalizeName(student.firstName) === normalizeName(firstName) &&
+          normalizeName(student.lastName) === normalizeName(lastName)
+        );
+      });
 
       return {
         ...signup,
