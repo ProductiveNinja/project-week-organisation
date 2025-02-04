@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { UseData } from "./hooks/useData";
+import { generateSeed, UseData } from "./hooks/useData.ts";
 import { ProjectAssignment as Assignment } from "./types/ProjectAssignment.ts";
-import * as moment from "moment";
 import { ProjectAssignmentTable } from "./ProjectAssignmentTable.tsx";
 import { StudentSignup } from "./types/StudentSignup.ts";
 import { EditAssigmentModal } from "./EditAssigmentModal.tsx";
 import { OverrideAssignmentTable } from "./OverrideAssignmentTable.tsx";
 import { UnassignedStudentsTable } from "./UnassignedStudentsTable.tsx";
+import * as chance from "chance";
 
 type Props = {
   continueCallback: () => void;
@@ -22,16 +22,18 @@ export const ProjectAssignment: React.FC<Props> = ({
   overrideAssigments,
   setOverrideAssigments,
   continueCallback,
+  shuffleSeed,
+  setShuffleSeed,
 }) => {
   const [selectedAssigmentIndex, setSelectedAssignmentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [editSignup, setEditSignup] = useState<StudentSignup | null>(null);
 
   const assignProjects = () => {
-    const sortedSignups = [...signups].sort(
-      (a, b) =>
-        moment(a.createdAt).toDate().getTime() -
-        moment(b.createdAt).toDate().getTime()
+    const chanceInstance = chance(shuffleSeed);
+
+    const sortedSignups = [...signups].sort(() =>
+      chanceInstance.bool() ? -1 : 1
     );
 
     const projectAssignments: Assignment[] = projects.map((project) => ({
@@ -79,7 +81,7 @@ export const ProjectAssignment: React.FC<Props> = ({
   useEffect(() => {
     assignProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, signups, overrideAssigments]);
+  }, [projects, signups, overrideAssigments, shuffleSeed]);
 
   const filteredAssignments = useMemo(() => {
     if (!searchQuery.trim().length) return assignments;
@@ -144,7 +146,7 @@ export const ProjectAssignment: React.FC<Props> = ({
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search..."
+                  placeholder="Suchen ..."
                   aria-label="Search"
                   style={{ maxWidth: "180px" }}
                   value={searchQuery}
@@ -190,7 +192,20 @@ export const ProjectAssignment: React.FC<Props> = ({
             />
           )}
         </div>
-        <div className="col-6" style={{ marginTop: "139px" }}>
+        <div className="col-6">
+          <p className="text-muted">
+            Die Schüler:innen werden zufällig gemischt bevor sie in die Projekte
+            zugeteilt werden. Dies wird Anhande eines Seeds durchgeführt:
+          </p>
+          <div className="d-flex gap-2" style={{ marginBottom: "54px" }}>
+            <input type="text" value={shuffleSeed} readOnly disabled />
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShuffleSeed(generateSeed())}
+            >
+              Neuen Seed generieren
+            </button>
+          </div>
           <UnassignedStudentsTable
             missingStudents={missingStudents}
             signups={signups}

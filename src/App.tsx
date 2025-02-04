@@ -12,6 +12,7 @@ import { Summary } from "./Summary.tsx";
 import { toStaticFileUrl } from "./util.ts";
 import { StudentSignup } from "./types/StudentSignup.ts";
 import { EditPriorityModal } from "./EditPriorityModal.tsx";
+import { LinkStudentToSignupModal } from "./LinkStudentToSignupModal.tsx";
 
 type ProcessStep = {
   title: string;
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
     signup: StudentSignup;
     priorityIndex: number;
   } | null>(null);
+  const [editSignup, setEditSignup] = useState<StudentSignup | null>(null);
 
   const useAlertHook = useAlert();
   const { alert, setAlert } = useAlertHook;
@@ -60,8 +62,11 @@ export const App: React.FC = () => {
     signups,
     setSignups,
     deleteSignups,
+    setManualLinkedSignups,
+    deleteManualLinkedSignups,
     deleteAssignments,
     deleteOverrideAssigments,
+    deleteShuffleSeed,
     downloadData,
     uploadData,
   } = data;
@@ -70,8 +75,10 @@ export const App: React.FC = () => {
     deleteProjects();
     deleteStudents();
     deleteSignups();
+    deleteManualLinkedSignups();
     deleteAssignments();
     deleteOverrideAssigments();
+    deleteShuffleSeed();
 
     setAlert({
       message: "Daten erfolgreich gelöscht",
@@ -91,6 +98,10 @@ export const App: React.FC = () => {
 
   const hasSavedData =
     projects.length > 0 || students.length > 0 || signups.length > 0;
+
+  const missingStudentLinks = signups.filter(
+    ({ linkedStudent }) => !linkedStudent
+  );
 
   return (
     <div className="w-100 h-100">
@@ -190,6 +201,20 @@ export const App: React.FC = () => {
               onClose={() => setEditProjectPriority(null)}
             />
           )}
+          {editSignup && (
+            <LinkStudentToSignupModal
+              signup={editSignup}
+              students={students}
+              linkCallback={(student) => {
+                setManualLinkedSignups((prev) => [
+                  ...prev,
+                  { signupId: editSignup.id, student },
+                ]);
+                setEditSignup(null);
+              }}
+              onClose={() => setEditSignup(null)}
+            />
+          )}
           {
             [
               <CSVImporter
@@ -258,7 +283,15 @@ export const App: React.FC = () => {
                       <strong>"Projekt (nr) - (Titel)"</strong> sein, ansonsten
                       können die Projekte nicht zugeordnet werden. Rot
                       eingefärbte Prioritäten sind doppelt gewählte Projekte.
-                      Per Klick kannst du die Priorität ändern.
+                      Per Klick kannst du die Priorität ändern.{" "}
+                      {missingStudentLinks.length > 0 && (
+                        <strong className="text-danger">
+                          ACHTUNG: Bei {missingStudentLinks.length}{" "}
+                          Schüler:innen konnte die Klasse nicht automatisch
+                          zugewiesen werden. Klicke auf das rote Feld in der
+                          Spalte "Klasse", um diese manuell zuzuweisen.
+                        </strong>
+                      )}
                     </p>
                     <img
                       src={toStaticFileUrl("forms-sample.png")}
@@ -273,61 +306,78 @@ export const App: React.FC = () => {
                     />
                   </div>
                 }
-                renderListItem={({
-                  id,
-                  name,
-                  email,
-                  linkedStudent,
-                  projectsPriority,
-                  createdAt,
-                  finishedAt,
-                }) => (
-                  <>
-                    <td>{id}</td>
-                    <td>{linkedStudent ? linkedStudent.className : "-"}</td>
-                    <td>
-                      {linkedStudent
-                        ? `${linkedStudent.firstName} ${linkedStudent.lastName}`
-                        : name}
-                    </td>
-                    {projectsPriority.map((project, i) => {
-                      const isDuplicate =
-                        i !== 0 &&
-                        projectsPriority
-                          .slice(0, i)
-                          .some((p) => p.id === project.id);
+                renderListItem={(signup) => {
+                  const {
+                    id,
+                    name,
+                    email,
+                    linkedStudent,
+                    projectsPriority,
+                    createdAt,
+                    finishedAt,
+                  } = signup;
 
-                      return (
-                        <td
-                          key={i}
-                          className="text-truncate clickable"
-                          style={{
-                            maxWidth: 200,
-                            backgroundColor: isDuplicate
-                              ? "#ff000055"
-                              : undefined,
-                          }}
-                          onClick={() => {
-                            setEditProjectPriority({
-                              signup: {
-                                id,
-                                name,
-                                email,
-                                linkedStudent,
-                                projectsPriority,
-                                createdAt,
-                                finishedAt,
-                              },
-                              priorityIndex: i,
-                            });
-                          }}
-                        >
-                          {project.title}
-                        </td>
-                      );
-                    })}
-                  </>
-                )}
+                  return (
+                    <>
+                      <td>{id}</td>
+                      <td
+                        style={{
+                          backgroundColor: linkedStudent
+                            ? undefined
+                            : "#ff000055",
+                        }}
+                        className={!linkedStudent ? "clickable" : ""}
+                        onClick={() => {
+                          if (linkedStudent) return;
+                          setEditSignup(signup);
+                        }}
+                      >
+                        {linkedStudent ? linkedStudent.className : "-"}
+                      </td>
+                      <td>
+                        {linkedStudent
+                          ? `${linkedStudent.firstName} ${linkedStudent.lastName}`
+                          : name}
+                      </td>
+                      {projectsPriority.map((project, i) => {
+                        const isDuplicate =
+                          i !== 0 &&
+                          projectsPriority
+                            .slice(0, i)
+                            .some((p) => p.id === project.id);
+
+                        return (
+                          <td
+                            key={i}
+                            className="text-truncate clickable"
+                            style={{
+                              maxWidth: 200,
+                              backgroundColor: isDuplicate
+                                ? "#ff000055"
+                                : undefined,
+                            }}
+                            onClick={() => {
+                              setEditProjectPriority({
+                                signup: {
+                                  id,
+                                  name,
+                                  email,
+                                  linkedStudent,
+                                  projectsPriority,
+                                  createdAt,
+                                  finishedAt,
+                                },
+                                priorityIndex: i,
+                              });
+                            }}
+                          >
+                            {project.title}
+                          </td>
+                        );
+                      })}
+                    </>
+                  );
+                }}
                 itemMapCallback={(row) => mapSignupRow(row)}
                 continueCallback={() => setCurrentStepIndex((prev) => prev + 1)}
               />,

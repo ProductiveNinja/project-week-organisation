@@ -10,6 +10,11 @@ import { UseAlert } from "./useAlert.ts";
 import { useLocalStorageValue } from "./useLocalStorageValue.ts";
 import { normalizeName } from "../util.ts";
 import * as moment from "moment";
+import * as chance from "chance";
+
+export const generateSeed = () => {
+  return chance().hash({ length: 10 });
+};
 
 export const useData = (setAlert: UseAlert["setAlert"]) => {
   const [projects, setProjects, deleteProjects] = useLocalStorageValue<
@@ -19,6 +24,15 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
   const [students, setStudents, deleteStudents] = useLocalStorageValue<
     Student[]
   >("students", []);
+
+  const [
+    manualLinkedSignups,
+    setManualLinkedSignups,
+    deleteManualLinkedSignups,
+  ] = useLocalStorageValue<Array<{ signupId: number; student: Student }>>(
+    "manualLinkedSignups",
+    []
+  );
 
   const [signups, setSignups, deleteSignups] = useLocalStorageValue<
     StudentSignup[]
@@ -30,6 +44,9 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
 
   const [overrideAssigments, setOverrideAssigments, deleteOverrideAssigments] =
     useLocalStorageValue<OverrideAssignment[]>("overrideAssigments", []);
+
+  const [shuffleSeed, setShuffleSeed, deleteShuffleSeed] =
+    useLocalStorageValue<string>("shuffleSeed", generateSeed());
 
   const linkStudentsToSignups = () => {
     const newSignups = signups.map((signup) => {
@@ -47,9 +64,13 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
         );
       });
 
+      const manualLinkedStudent = manualLinkedSignups.find(
+        ({ signupId }) => signup.id === signupId
+      )?.student;
+
       return {
         ...signup,
-        linkedStudent,
+        linkedStudent: linkedStudent ?? manualLinkedStudent,
       };
     });
 
@@ -87,11 +108,18 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signups]);
 
+  useEffect(() => {
+    linkStudentsToSignups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manualLinkedSignups]);
+
   const downloadData = () => {
     const data = {
+      shuffleSeed,
       projects,
       students,
       signups,
+      manualLinkedSignups,
       overrideAssigments,
     };
 
@@ -126,8 +154,10 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
       setProjects(data.projects || []);
       setStudents(data.students || []);
       setSignups(data.signups || []);
+      setManualLinkedSignups(data.manualLinkedSignups || []);
       setAssignments(data.assignments || []);
       setOverrideAssigments(data.overrideAssigments || []);
+      setShuffleSeed(data.shuffleSeed || generateSeed());
 
       setAlert({
         message: "Daten erfolgreich geladen",
@@ -149,12 +179,18 @@ export const useData = (setAlert: UseAlert["setAlert"]) => {
     missingStudents,
     setSignups,
     deleteSignups,
+    manualLinkedSignups,
+    setManualLinkedSignups,
+    deleteManualLinkedSignups,
     assignments,
     setAssignments,
     deleteAssignments,
     overrideAssigments,
     setOverrideAssigments,
     deleteOverrideAssigments,
+    shuffleSeed,
+    setShuffleSeed,
+    deleteShuffleSeed,
     linkStudentsToSignups,
     downloadData,
     uploadData,

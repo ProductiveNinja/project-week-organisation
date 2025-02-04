@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 export type ModalProps = {
   onClose: () => void;
@@ -15,10 +15,6 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
 }) => {
-  useEffect(() => {
-    document.body.classList.add("scroll-disabled");
-  }, []);
-
   return (
     <div
       className="modal show d-flex justify-content-center align-items-center"
@@ -33,7 +29,6 @@ export const Modal: React.FC<ModalProps> = ({
               data-dismiss="modal"
               aria-label="Close"
               onClick={() => {
-                document.body.classList.remove("scroll-disabled");
                 onClose();
               }}
             >
