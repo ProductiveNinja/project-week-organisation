@@ -100,10 +100,24 @@ export const ProjectAssignment: React.FC<Props> = ({
       .filter((assignment) => assignment.studentSignups.length > 0);
   }, [searchQuery, assignments, setSelectedAssignmentIndex]);
 
+  const countByPriority = useMemo(() => {
+    const countByPriority: number[] = [0, 0, 0, 0];
+    filteredAssignments.forEach((assignment) => {
+      assignment.studentSignups.forEach((signup) => {
+        const priorityIndex = signup.projectsPriority.findIndex(
+          (p) => p.id === assignment.project.id
+        );
+        countByPriority[priorityIndex]++;
+      });
+    });
+
+    return countByPriority;
+  }, [filteredAssignments]);
+
   return (
     <div className="w-100 h-auto d-flex flex-column gap-4">
       <div className="row">
-        <div className="col-6">
+        <div className="col-7">
           <h2>Projekteinteilung</h2>
           <div
             className="w-100 d-flex justify-conte
@@ -169,6 +183,21 @@ export const ProjectAssignment: React.FC<Props> = ({
             </button>
           </div>
           <div className="w-100 mt-3">
+            <div>
+              <p className="fw-bold">Anzahl nach Priorität</p>
+              <ul className="d-block">
+                {countByPriority.map((count, i) => (
+                  <li key={i}>
+                    <p>
+                      <strong>Prio. {i + 1}: </strong>
+                      {count}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="w-100 mt-3">
             {filteredAssignments[selectedAssigmentIndex] && (
               <ProjectAssignmentTable
                 assignment={filteredAssignments[selectedAssigmentIndex]}
@@ -192,12 +221,12 @@ export const ProjectAssignment: React.FC<Props> = ({
             />
           )}
         </div>
-        <div className="col-6">
-          <p className="text-muted">
+        <div className="col-5">
+          <p className="text-muted mt-5">
             Die Schüler:innen werden zufällig gemischt bevor sie in die Projekte
             zugeteilt werden. Dies wird Anhande eines Seeds durchgeführt:
           </p>
-          <div className="d-flex gap-2" style={{ marginBottom: "54px" }}>
+          <div className="d-flex gap-2" style={{ marginBottom: "142.5px" }}>
             <input type="text" value={shuffleSeed} readOnly disabled />
             <button
               className="btn btn-secondary"
@@ -206,6 +235,12 @@ export const ProjectAssignment: React.FC<Props> = ({
               Neuen Seed generieren
             </button>
           </div>
+          <OverrideAssignmentTable
+            signups={signups}
+            projects={projects}
+            overrideAssignments={overrideAssigments}
+            setOverrideAssignments={setOverrideAssigments}
+          />
           <UnassignedStudentsTable
             missingStudents={missingStudents}
             signups={signups}
@@ -217,12 +252,6 @@ export const ProjectAssignment: React.FC<Props> = ({
                 signup,
               ]);
             }}
-          />
-          <OverrideAssignmentTable
-            signups={signups}
-            projects={projects}
-            overrideAssignments={overrideAssigments}
-            setOverrideAssignments={setOverrideAssigments}
           />
         </div>
       </div>

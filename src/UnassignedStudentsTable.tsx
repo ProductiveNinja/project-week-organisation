@@ -32,7 +32,7 @@ export const UnassignedStudentsTable: React.FC<Props> = ({
           signupCallback={(signup) => addSignup(signup)}
         />
       )}
-      <h3>Fehlende / Unzugewisene Schüler:innen</h3>
+      <h3>Fehlende / Unzugewisene Schüler:innen ({missingStudents.length})</h3>
       <div className="w-full">
         <Table striped bordered hover>
           <thead>
@@ -43,6 +43,11 @@ export const UnassignedStudentsTable: React.FC<Props> = ({
             </tr>
           </thead>
           <tbody>
+            {missingStudents.length === 0 && (
+              <tr>
+                <td colSpan={3}>Keine fehlenden Schüler:innen</td>
+              </tr>
+            )}
             {missingStudents.map(({ className, firstName, lastName }, i) => (
               <tr key={i}>
                 <td>{className}</td>

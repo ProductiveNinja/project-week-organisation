@@ -35,6 +35,11 @@ export const OverrideAssignmentTable: React.FC<Props> = ({
             </tr>
           </thead>
           <tbody>
+            {overrideAssignments.length === 0 && (
+              <tr>
+                <td colSpan={5}>Keine manuellen Änderungen</td>
+              </tr>
+            )}
             {overrideAssignments.map(({ projectId, signupId }) => {
               const signup = signups.find((s) => s.id === signupId);
               const project = projects.find((p) => p.id === projectId);
