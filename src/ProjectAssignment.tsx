@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { generateSeed, UseData } from "./hooks/useData.ts";
-import { ProjectAssignment as Assignment } from "./types/ProjectAssignment.ts";
 import { ProjectAssignmentTable } from "./ProjectAssignmentTable.tsx";
 import { StudentSignup } from "./types/StudentSignup.ts";
 import { EditAssigmentModal } from "./EditAssigmentModal.tsx";
 import { OverrideAssignmentTable } from "./OverrideAssignmentTable.tsx";
 import { UnassignedStudentsTable } from "./UnassignedStudentsTable.tsx";
-import * as chance from "chance";
 import { useAssignmentAlgorithm } from "./hooks/useAssignmentAlgorithm.ts";
 
 type Props = {
