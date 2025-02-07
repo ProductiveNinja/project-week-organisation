@@ -7,6 +7,7 @@ import { EditAssigmentModal } from "./EditAssigmentModal.tsx";
 import { OverrideAssignmentTable } from "./OverrideAssignmentTable.tsx";
 import { UnassignedStudentsTable } from "./UnassignedStudentsTable.tsx";
 import * as chance from "chance";
+import { useAssignmentAlgorithm } from "./hooks/useAssignmentAlgorithm.ts";
 
 type Props = {
   continueCallback: () => void;
@@ -29,59 +30,18 @@ export const ProjectAssignment: React.FC<Props> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [editSignup, setEditSignup] = useState<StudentSignup | null>(null);
 
-  const assignProjects = () => {
-    const chanceInstance = chance(shuffleSeed);
-
-    const sortedSignups = [...signups].sort(() =>
-      chanceInstance.bool() ? -1 : 1
-    );
-
-    const projectAssignments: Assignment[] = projects.map((project) => ({
-      project,
-      studentSignups: [],
-    }));
-
-    overrideAssigments.forEach(({ projectId, signupId }) => {
-      const projectAssignment = projectAssignments.find(
-        (pa) => pa.project.id === projectId
-      );
-
-      const signup = signups.find((s) => s.id === signupId);
-
-      if (projectAssignment && signup) {
-        projectAssignment.studentSignups.push(signup);
-      }
-    });
-
-    sortedSignups
-      .filter(
-        (signup) =>
-          !overrideAssigments.some(({ signupId }) => signup.id === signupId)
-      )
-      .forEach((signup) => {
-        for (const priorityProject of signup.projectsPriority) {
-          const projectAssignment = projectAssignments.find(
-            (pa) => pa.project.id === priorityProject.id
-          );
-
-          if (
-            projectAssignment &&
-            projectAssignment.studentSignups.length <
-              projectAssignment.project.maxParticipants
-          ) {
-            projectAssignment.studentSignups.push(signup);
-            break;
-          }
-        }
-      });
-
-    setAssignments(projectAssignments);
-  };
+  const { assignProjects } = useAssignmentAlgorithm(
+    shuffleSeed,
+    projects,
+    overrideAssigments,
+    signups,
+    setAssignments
+  );
 
   useEffect(() => {
     assignProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, signups, overrideAssigments, shuffleSeed]);
+  }, [projects, signups, overrideAssigments]);
 
   const filteredAssignments = useMemo(() => {
     if (!searchQuery.trim().length) return assignments;
@@ -184,7 +144,9 @@ export const ProjectAssignment: React.FC<Props> = ({
           </div>
           <div className="w-100 mt-3">
             <div>
-              <p className="fw-bold">Anzahl nach Priorität</p>
+              <p className="fw-bold">
+                Anzahl nach Priorität ({signups.length})
+              </p>
               <ul className="d-block">
                 {countByPriority.map((count, i) => (
                   <li key={i}>
@@ -221,12 +183,19 @@ export const ProjectAssignment: React.FC<Props> = ({
             />
           )}
         </div>
-        <div className="col-5">
-          <p className="text-muted mt-5">
-            Die Schüler:innen werden zufällig gemischt bevor sie in die Projekte
-            zugeteilt werden. Dies wird Anhande eines Seeds durchgeführt:
+        <div className="col-5 mt-2">
+          <p className="text-muted">
+            Mittels eines min–cost–max–flow-Algorithmus werden die Schüler:innen
+            so zu Projekten zugeordnet, dass, wenn möglich, jeder seinen ersten
+            oder zweiten Wunsch erhält und somit keine dritten oder vierten
+            Prioritäten vergeben werden.
           </p>
-          <div className="d-flex gap-2" style={{ marginBottom: "142.5px" }}>
+          <p className="text-muted mt-2">
+            Falls es nicht möglich ist, alle Schüler:innen in ihren ersten oder
+            zweiten Wunsch einzuteilen, werden sie anhand eines Seeds gemischt,
+            und in den dritten oder vierten Wunsch eingeordnet.
+          </p>
+          <div className="d-flex gap-2 mt-1">
             <input type="text" value={shuffleSeed} readOnly disabled />
             <button
               className="btn btn-secondary"
@@ -235,6 +204,73 @@ export const ProjectAssignment: React.FC<Props> = ({
               Neuen Seed generieren
             </button>
           </div>
+          <span className="text-muted mt-2 d-flex flex-wrap gap-2" style={{ marginBottom: '2px'}}>
+            Referenzen:
+            <a
+              href="https://en.wikipedia.org/wiki/Assignment_problem"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Assignment problem
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Hungarian_algorithm"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Hungarian algorithm
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Bipartite_graph"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Bipartite graph
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Maximum_flow_problem"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Maximum flow problem
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Ford-Fulkerson algorithm
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Edmonds%E2%80%93Karp_algorithm"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Edmonds-Karp algorithm
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Minimum-cost_flow_problem"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Minimum-cost flow problem
+            </a>
+            <a
+              href="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary"
+            >
+              Bellman-Ford algorithm
+            </a>
+          </span>
           <OverrideAssignmentTable
             signups={signups}
             projects={projects}

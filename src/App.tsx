@@ -66,7 +66,6 @@ export const App: React.FC = () => {
     deleteManualLinkedSignups,
     deleteAssignments,
     deleteOverrideAssigments,
-    deleteShuffleSeed,
     downloadData,
     uploadData,
   } = data;
@@ -78,7 +77,6 @@ export const App: React.FC = () => {
     deleteManualLinkedSignups();
     deleteAssignments();
     deleteOverrideAssigments();
-    deleteShuffleSeed();
 
     setAlert({
       message: "Daten erfolgreich gelöscht",
