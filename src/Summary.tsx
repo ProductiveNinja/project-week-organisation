@@ -240,11 +240,13 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
                         {signup.projectsPriority.map((project, k) => (
                           <td
                             key={k}
+                            className="text-truncate"
                             style={{
                               backgroundColor:
                                 k === priorityIndex
                                   ? priorityIndexColorMap[priorityIndex]
                                   : undefined,
+                              maxWidth: "200px",
                             }}
                           >
                             {project.title}
