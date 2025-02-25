@@ -196,6 +196,26 @@ export const ProjectAssignment: React.FC<Props> = ({
           )}
         </div>
         <div className="col-5 mt-2">
+          <p className="text-muted">
+            Mittels eines min–cost–max–flow-Algorithmus werden die Schüler:innen
+            so zu Projekten zugeordnet, dass, wenn möglich, jeder seinen ersten
+            oder zweiten Wunsch erhält und somit keine dritten oder vierten
+            Prioritäten vergeben werden.
+          </p>
+          <p className="text-muted mt-2">
+            Falls es nicht möglich ist, alle Schüler:innen in ihren ersten oder
+            zweiten Wunsch einzuteilen, werden sie anhand eines Seeds gemischt,
+            und in den dritten oder vierten Wunsch eingeordnet.
+          </p>
+          <div className="d-flex gap-2 mt-1" style={{ marginBottom: "98px" }}>
+            <input type="text" value={shuffleSeed} readOnly disabled />
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShuffleSeed(generateSeed())}
+            >
+              Neuen Seed generieren
+            </button>
+          </div>
           <OverrideAssignmentTable
             signups={signups}
             projects={projects}
