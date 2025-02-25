@@ -44,7 +44,7 @@ export const ProjectAssignmentTable: React.FC<Props> = ({
               <td colSpan={5}>Keine Anmeldungen</td>
             </tr>
           )}
-          {assignment.studentSignups.map((signup, i) => {
+          {assignment.studentSignups.map((signup) => {
             const { id, linkedStudent, name, projectsPriority } = signup;
             const priorityIndex = projectsPriority.findIndex(
               (p) => p.id === assignment.project.id

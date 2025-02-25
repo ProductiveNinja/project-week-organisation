@@ -289,6 +289,19 @@ export const useAssignmentAlgorithm = (
           if (prevAssignment && prevAssignment.project.id !== pa.project.id) {
             changes.push([signup, prevAssignment.project, pa.project]);
           }
+
+          if (
+            signup.projectsPriority.findIndex((p) => p.id === pa.project.id) ===
+            -1
+          ) {
+            console.log(
+              "Student",
+              signup.name,
+              "was assigned to project",
+              pa.project.title,
+              "but it was not in their priority list"
+            );
+          }
         }
       }
     }

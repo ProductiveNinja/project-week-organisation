@@ -1,9 +1,11 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { UseData } from "./hooks/useData";
 import { Table } from "react-bootstrap";
 import * as XLSX from "xlsx/xlsx.mjs";
 import { StudentSignup } from "./types/StudentSignup";
 import * as moment from "moment";
+
+const priorityIndexColorMap = ["#00FF00", "#FFA500", "#FF7F7F", "#FF0000"];
 
 type Props = {
   downloadCallback: () => void;
@@ -205,6 +207,56 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
           >
             Nach Projekten eingeteilt <i className="bi bi-download"></i>
           </button>
+        </div>
+        <div className="col-12">
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Klasse</th>
+                <th>Name</th>
+                {Array.from({ length: 4 })
+                  .map((_, i) => `Prio. ${i + 1}`)
+                  .map((text, i) => (
+                    <th key={i}>{text}</th>
+                  ))}
+              </tr>
+            </thead>
+            <tbody>
+              {assignments.map((assignment, i) => (
+                <Fragment key={i}>
+                  {assignment.studentSignups.map((signup, j) => {
+                    const priorityIndex = signup.projectsPriority.findIndex(
+                      (p) => p.id === assignment.project.id
+                    );
+                    return (
+                      <tr key={j}>
+                        <td>{signup.id}</td>
+                        <td>{signup.linkedStudent?.className ?? "-"}</td>
+                        <td>
+                          {signup.linkedStudent?.firstName}{" "}
+                          {signup.linkedStudent?.lastName}
+                        </td>
+                        {signup.projectsPriority.map((project, k) => (
+                          <td
+                            key={k}
+                            style={{
+                              backgroundColor:
+                                k === priorityIndex
+                                  ? priorityIndexColorMap[priorityIndex]
+                                  : undefined,
+                            }}
+                          >
+                            {project.title}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </Fragment>
+              ))}
+            </tbody>
+          </Table>
         </div>
       </div>
     </div>

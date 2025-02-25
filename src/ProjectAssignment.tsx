@@ -183,6 +183,7 @@ export const ProjectAssignment: React.FC<Props> = ({
                   overrideAssignment,
                 ])
               }
+              projects={projects}
               projectAssigments={assignments}
               signup={editSignup}
             />
@@ -195,96 +196,6 @@ export const ProjectAssignment: React.FC<Props> = ({
           )}
         </div>
         <div className="col-5 mt-2">
-          <p className="text-muted">
-            Mittels eines min–cost–max–flow-Algorithmus werden die Schüler:innen
-            so zu Projekten zugeordnet, dass, wenn möglich, jeder seinen ersten
-            oder zweiten Wunsch erhält und somit keine dritten oder vierten
-            Prioritäten vergeben werden.
-          </p>
-          <p className="text-muted mt-2">
-            Falls es nicht möglich ist, alle Schüler:innen in ihren ersten oder
-            zweiten Wunsch einzuteilen, werden sie anhand eines Seeds gemischt,
-            und in den dritten oder vierten Wunsch eingeordnet.
-          </p>
-          <div className="d-flex gap-2 mt-1">
-            <input type="text" value={shuffleSeed} readOnly disabled />
-            <button
-              className="btn btn-secondary"
-              onClick={() => setShuffleSeed(generateSeed())}
-            >
-              Neuen Seed generieren
-            </button>
-          </div>
-          <span
-            className="text-muted mt-2 d-flex flex-wrap gap-2"
-            style={{ marginBottom: "2px" }}
-          >
-            Referenzen:
-            <a
-              href="https://en.wikipedia.org/wiki/Assignment_problem"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Assignment problem
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Hungarian_algorithm"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Hungarian algorithm
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Bipartite_graph"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Bipartite graph
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Maximum_flow_problem"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Maximum flow problem
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Ford-Fulkerson algorithm
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Edmonds%E2%80%93Karp_algorithm"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Edmonds-Karp algorithm
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Minimum-cost_flow_problem"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Minimum-cost flow problem
-            </a>
-            <a
-              href="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary"
-            >
-              Bellman-Ford algorithm
-            </a>
-          </span>
           <OverrideAssignmentTable
             signups={signups}
             projects={projects}
@@ -296,7 +207,6 @@ export const ProjectAssignment: React.FC<Props> = ({
             signups={signups}
             assignments={assignments}
             addSignup={(signup) => {
-              console.log(signup);
               setSignups((prev) => [
                 ...prev.filter(({ id }) => id !== signup.id),
                 signup,
