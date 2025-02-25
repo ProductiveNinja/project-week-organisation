@@ -19,7 +19,8 @@ export const AssignmentChangesModal: React.FC<Props> = ({
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Student:in</th>
+              <th>Klasse</th>
+              <th>Schüler:in</th>
               <th>Vorheriges Projekt</th>
               <th>Neues Projekt</th>
             </tr>
@@ -27,6 +28,7 @@ export const AssignmentChangesModal: React.FC<Props> = ({
           <tbody>
             {changes.map(([signup, oldProject, newProject], i) => (
               <tr key={i}>
+                <td>{signup.linkedStudent?.className ?? "-"}</td>
                 <td>
                   {signup.linkedStudent?.firstName}{" "}
                   {signup.linkedStudent?.lastName}

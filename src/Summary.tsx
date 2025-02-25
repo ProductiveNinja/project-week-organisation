@@ -225,6 +225,25 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
             <tbody>
               {assignments.map((assignment, i) => (
                 <Fragment key={i}>
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="fw-bold"
+                      style={{ fontWeight: "bold" }}
+                    >
+                      Projekt {assignment.project.id} -{" "}
+                      {assignment.project.title}
+                    </td>
+                  </tr>
+                  {assignment.studentSignups.length === 0 && (
+                    <tr>
+                      <td colSpan={7}>
+                        {assignment.project.cancelled
+                          ? "Abgesagt"
+                          : "Keine Anmeldungen"}
+                      </td>
+                    </tr>
+                  )}
                   {assignment.studentSignups.map((signup, j) => {
                     const priorityIndex = signup.projectsPriority.findIndex(
                       (p) => p.id === assignment.project.id

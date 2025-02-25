@@ -6,6 +6,7 @@ import { StudentSignup } from "./types/StudentSignup";
 type Props = {
   assignment: ProjectAssignment;
   editCallback: (studentSignup: StudentSignup) => void;
+  toggleProjectCancelled: () => void;
 };
 
 const priorityIndexColorMap = ["#00FF00", "#FFA500", "#FF7F7F", "#FF0000"];
@@ -13,6 +14,7 @@ const priorityIndexColorMap = ["#00FF00", "#FFA500", "#FF7F7F", "#FF0000"];
 export const ProjectAssignmentTable: React.FC<Props> = ({
   assignment,
   editCallback,
+  toggleProjectCancelled,
 }) => {
   if (!assignment.studentSignups) return null;
 
@@ -25,7 +27,20 @@ export const ProjectAssignmentTable: React.FC<Props> = ({
         Projekt {assignment.project.id} ({assignment.studentSignups.length} /{" "}
         {assignment.project.maxParticipants})
       </p>
-      <h3>{assignment.project.title}</h3>
+      <div className="d-flex gap-3">
+        <h3
+          style={{
+            textDecoration: assignment.project.cancelled
+              ? "line-through"
+              : "none",
+          }}
+        >
+          {assignment.project.title}
+        </h3>
+        <button className="btn btn-danger" onClick={toggleProjectCancelled}>
+          Absagen
+        </button>
+      </div>
       <Table striped bordered hover>
         <thead>
           <tr>

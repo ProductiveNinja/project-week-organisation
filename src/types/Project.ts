@@ -3,4 +3,5 @@ export type Project = {
   title: string;
   maxParticipants: number;
   remainingSeats?: number;
+  cancelled?: boolean;
 };

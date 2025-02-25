@@ -23,9 +23,12 @@ export const useAssignmentAlgorithm = (
 
     const shuffledSignups = chanceInstance.shuffle(signups);
 
+    // Filter out cancelled projects
+    const activeProjects = projects.filter((project) => !project.cancelled);
+
     // Initialize assignments per project.
     // Each element is of the form: { project, studentSignups: [] }
-    const projectAssignments = projects.map((project) => ({
+    const projectAssignments = activeProjects.map((project) => ({
       project,
       studentSignups: [],
     })) as ProjectAssignment[];
@@ -46,7 +49,7 @@ export const useAssignmentAlgorithm = (
 
     // Calculate each project's remaining capacity.
     const projectCapacities: { [projectId: string]: number } = {};
-    projects.forEach((project) => {
+    activeProjects.forEach((project) => {
       const pa = projectAssignments.find((pa) => pa.project.id === project.id);
       if (!pa) return;
       projectCapacities[project.id] =
@@ -58,7 +61,7 @@ export const useAssignmentAlgorithm = (
       (s) => !assignedSignupIds.has(s.id)
     );
     const n = unassignedStudents.length;
-    const m = projects.length;
+    const m = activeProjects.length;
 
     // We construct a graph for min–cost max–flow.
     // Node indices:
@@ -112,7 +115,7 @@ export const useAssignmentAlgorithm = (
       // First choice edge.
       if (student.projectsPriority.length > 0) {
         const proj = student.projectsPriority[0];
-        const projIndex = projects.findIndex((p) => p.id === proj.id);
+        const projIndex = activeProjects.findIndex((p) => p.id === proj.id);
         // Only add if this project has any remaining capacity.
         if (projIndex >= 0 && projectCapacities[proj.id] > 0) {
           addEdge(1 + i, 1 + n + projIndex, 1, 0);
@@ -121,7 +124,7 @@ export const useAssignmentAlgorithm = (
       // Second choice edge.
       if (student.projectsPriority.length > 1) {
         const proj = student.projectsPriority[1];
-        const projIndex = projects.findIndex((p) => p.id === proj.id);
+        const projIndex = activeProjects.findIndex((p) => p.id === proj.id);
         if (projIndex >= 0 && projectCapacities[proj.id] > 0) {
           addEdge(1 + i, 1 + n + projIndex, 1, 1);
         }
@@ -129,7 +132,7 @@ export const useAssignmentAlgorithm = (
     });
 
     // 3. For each project, add an edge from its node to the sink.
-    projects.forEach((project, j) => {
+    activeProjects.forEach((project, j) => {
       const cap = projectCapacities[project.id];
       if (cap > 0) {
         addEdge(1 + n + j, sink, cap, 0);
@@ -197,7 +200,7 @@ export const useAssignmentAlgorithm = (
       for (const edge of graph[studentNode]) {
         if (edge.to >= 1 + n && edge.to < 1 + n + m && edge.flow > 0) {
           const projIndex = edge.to - (1 + n);
-          const project = projects[projIndex];
+          const project = activeProjects[projIndex];
           const prio = edge.cost === 0 ? 1 : 2;
           matching.set(unassignedStudents[i].id, {
             projectId: project.id,
@@ -306,6 +309,23 @@ export const useAssignmentAlgorithm = (
       }
     }
 
+    const assignmentsWithCancelled: ProjectAssignment[] = [];
+
+    for (let i = 0; i < projects.length; i++) {
+      const project = projects[i];
+      const assignment = projectAssignments.find(
+        (pa) => pa.project.id === project.id
+      );
+      if (assignment) {
+        assignmentsWithCancelled.push(assignment);
+      } else {
+        assignmentsWithCancelled.push({
+          project,
+          studentSignups: [],
+        });
+      }
+    }
+
     // --- Final Outcome ---
     // Every student is now assigned to some project.
     // In the final interpretation:
@@ -313,7 +333,7 @@ export const useAssignmentAlgorithm = (
     //   • If via a cost-1 edge, they get prio 2.
     //   • Fallback assignments from the third-choice are prio 3.
     //   • Any arbitrary fallback assignment (last resort) is also prio 3.
-    setAssignments(projectAssignments);
+    setAssignments(assignmentsWithCancelled);
 
     return changes;
   };

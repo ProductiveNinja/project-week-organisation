@@ -15,6 +15,7 @@ type Props = {
 
 export const ProjectAssignment: React.FC<Props> = ({
   projects,
+  setProjects,
   signups,
   setSignups,
   missingStudents,
@@ -169,6 +170,16 @@ export const ProjectAssignment: React.FC<Props> = ({
               <ProjectAssignmentTable
                 assignment={filteredAssignments[selectedAssigmentIndex]}
                 editCallback={(signup) => setEditSignup(signup)}
+                toggleProjectCancelled={() =>
+                  setProjects((prev) =>
+                    prev.map((project) =>
+                      project.id ===
+                      filteredAssignments[selectedAssigmentIndex].project.id
+                        ? { ...project, cancelled: !project.cancelled }
+                        : project
+                    )
+                  )
+                }
               />
             )}
           </div>
