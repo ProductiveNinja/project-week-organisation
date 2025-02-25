@@ -12,11 +12,16 @@ export const useAssignmentAlgorithm = (
   projects: Project[],
   overrideAssigments: OverrideAssignment[],
   signups: StudentSignup[],
+  prevAssignments: ProjectAssignment[],
   setAssignments: Dispatch<SetStateAction<ProjectAssignment[]>>
 ) => {
+  const previousAssignments = [...prevAssignments];
+
   const assignProjects = () => {
     // A seeded random generator (used later in fallback tie–breaking)
     const chanceInstance = chance(shuffleSeed);
+
+    const shuffledSignups = chanceInstance.shuffle(signups);
 
     // Initialize assignments per project.
     // Each element is of the form: { project, studentSignups: [] }
@@ -32,7 +37,7 @@ export const useAssignmentAlgorithm = (
     // (These assignments are “locked in” and count toward the project capacity.)
     overrideAssigments.forEach(({ projectId, signupId }) => {
       const pa = projectAssignments.find((pa) => pa.project.id === projectId);
-      const signup = signups.find((s) => s.id === signupId);
+      const signup = shuffledSignups.find((s) => s.id === signupId);
       if (pa && signup) {
         pa.studentSignups.push(signup);
         assignedSignupIds.add(signup.id);
@@ -40,18 +45,16 @@ export const useAssignmentAlgorithm = (
     });
 
     // Calculate each project's remaining capacity.
-    const projectCapacities = {};
+    const projectCapacities: { [projectId: string]: number } = {};
     projects.forEach((project) => {
       const pa = projectAssignments.find((pa) => pa.project.id === project.id);
-
       if (!pa) return;
-
       projectCapacities[project.id] =
         project.maxParticipants - pa.studentSignups.length;
     });
 
     // --- Phase 1: Try to Match Every Remaining Student Using Only Their Top 2 Choices ---
-    const unassignedStudents = signups.filter(
+    const unassignedStudents = shuffledSignups.filter(
       (s) => !assignedSignupIds.has(s.id)
     );
     const n = unassignedStudents.length;
@@ -145,7 +148,6 @@ export const useAssignmentAlgorithm = (
       inQueue[source] = true;
       while (queue.length) {
         const u = queue.shift() as number;
-
         inQueue[u] = false;
         for (let i = 0; i < graph[u].length; i++) {
           const edge = graph[u][i];
@@ -189,7 +191,7 @@ export const useAssignmentAlgorithm = (
     // For each student node (indices 1 .. n), check its outgoing edges.
     // If an edge going to a project node carries flow 1, then that student is matched.
     // Use the cost of that edge to determine whether it was a first (cost 0) or second (cost 1) choice.
-    const matching = new Map(); // student.id => { projectId, priority }
+    const matching = new Map<number, { projectId: number; priority: number }>(); // student.id => { projectId, priority }
     for (let i = 0; i < n; i++) {
       const studentNode = 1 + i;
       for (const edge of graph[studentNode]) {
@@ -208,23 +210,22 @@ export const useAssignmentAlgorithm = (
 
     // Record these matches in the final assignments.
     matching.forEach((assign, studentId) => {
-      const student = signups.find((s) => s.id === studentId);
+      const student = shuffledSignups.find((s) => s.id === studentId);
       const pa = projectAssignments.find(
         (pa) => pa.project.id === assign.projectId
       );
-
       if (!student || !pa) return;
-
       pa.studentSignups.push(student);
       assignedSignupIds.add(studentId);
     });
 
     // --- Phase 2: Fallback Assignment for Any Still–Unmatched Students ---
-    // (Even if a student didn't get one of their top two choices according to the graph,
-    //  we must assign them to some project so that every student ends up with prio 1 or 2.)
-    // For fallback, we simply assign them arbitrarily to any project with available capacity.
-    // Their assignment will be labeled as prio 2.
-    const unmatchedStudents = signups.filter(
+    // For fallback, we try:
+    //   1. First choice,
+    //   2. Then second choice,
+    //   3. Then third choice (if provided),
+    //   4. Finally, arbitrarily if none of the above are available.
+    const unmatchedStudents = shuffledSignups.filter(
       (s) => !assignedSignupIds.has(s.id)
     );
     unmatchedStudents.forEach((student) => {
@@ -237,6 +238,7 @@ export const useAssignmentAlgorithm = (
           pa.studentSignups.push(student);
           assignedSignupIds.add(student.id);
           assigned = true;
+          // This fallback assignment is considered prio 1.
         }
       }
       // Next, try the student's second choice.
@@ -247,11 +249,22 @@ export const useAssignmentAlgorithm = (
           pa.studentSignups.push(student);
           assignedSignupIds.add(student.id);
           assigned = true;
+          // This fallback assignment is considered prio 2.
         }
       }
-      // Finally, if neither top–two has room (or the student did not list two), assign arbitrarily.
+      // Next, try the student's third choice.
+      if (!assigned && student.projectsPriority.length > 2) {
+        const proj = student.projectsPriority[2];
+        const pa = projectAssignments.find((pa) => pa.project.id === proj.id);
+        if (pa && pa.studentSignups.length < pa.project.maxParticipants) {
+          pa.studentSignups.push(student);
+          assignedSignupIds.add(student.id);
+          assigned = true;
+          // This fallback assignment is considered prio 3.
+        }
+      }
+      // Finally, if still not assigned, assign arbitrarily to any project.
       if (!assigned) {
-        // Shuffle the projects to avoid always picking the same one.
         const shuffled = chanceInstance.shuffle(projectAssignments);
         for (const pa of shuffled) {
           if (pa.studentSignups.length < pa.project.maxParticipants) {
@@ -262,17 +275,34 @@ export const useAssignmentAlgorithm = (
           }
         }
       }
-      // In fallback we label the assignment as prio 2.
-      // (Even if the project wasn't originally in the student’s top two,
-      //  we “upgrade” it to prio 2 so that the final outcome shows only prio 1 or prio 2.)
     });
+
+    const changes: Array<[StudentSignup, Project, Project]> = [];
+
+    if (previousAssignments.length) {
+      for (const pa of projectAssignments) {
+        for (const signup of pa.studentSignups) {
+          const prevAssignment = previousAssignments.find((pa) =>
+            pa.studentSignups.some((s) => s.id === signup.id)
+          );
+
+          if (prevAssignment && prevAssignment.project.id !== pa.project.id) {
+            changes.push([signup, prevAssignment.project, pa.project]);
+          }
+        }
+      }
+    }
 
     // --- Final Outcome ---
     // Every student is now assigned to some project.
     // In the final interpretation:
     //   • If a student was matched via a cost-0 edge, they get prio 1.
-    //   • All others (including fallback assignments) are labeled as prio 2.
+    //   • If via a cost-1 edge, they get prio 2.
+    //   • Fallback assignments from the third-choice are prio 3.
+    //   • Any arbitrary fallback assignment (last resort) is also prio 3.
     setAssignments(projectAssignments);
+
+    return changes;
   };
 
   return {

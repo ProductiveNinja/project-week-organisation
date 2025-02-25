@@ -6,6 +6,8 @@ import { EditAssigmentModal } from "./EditAssigmentModal.tsx";
 import { OverrideAssignmentTable } from "./OverrideAssignmentTable.tsx";
 import { UnassignedStudentsTable } from "./UnassignedStudentsTable.tsx";
 import { useAssignmentAlgorithm } from "./hooks/useAssignmentAlgorithm.ts";
+import { Project } from "./types/Project.ts";
+import { AssignmentChangesModal } from "./AssignmentChangesModal.tsx";
 
 type Props = {
   continueCallback: () => void;
@@ -27,19 +29,24 @@ export const ProjectAssignment: React.FC<Props> = ({
   const [selectedAssigmentIndex, setSelectedAssignmentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [editSignup, setEditSignup] = useState<StudentSignup | null>(null);
+  const [changes, setChanges] = useState<
+    Array<[StudentSignup, Project, Project]>
+  >([]);
 
   const { assignProjects } = useAssignmentAlgorithm(
     shuffleSeed,
     projects,
     overrideAssigments,
     signups,
+    assignments,
     setAssignments
   );
 
   useEffect(() => {
-    assignProjects();
+    const changes = assignProjects();
+    setChanges(changes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, signups, overrideAssigments]);
+  }, [shuffleSeed, projects, signups, overrideAssigments]);
 
   const filteredAssignments = useMemo(() => {
     if (!searchQuery.trim().length) return assignments;
@@ -180,6 +187,12 @@ export const ProjectAssignment: React.FC<Props> = ({
               signup={editSignup}
             />
           )}
+          {changes.length > 0 && (
+            <AssignmentChangesModal
+              changes={changes}
+              onClose={() => setChanges([])}
+            />
+          )}
         </div>
         <div className="col-5 mt-2">
           <p className="text-muted">
@@ -202,7 +215,10 @@ export const ProjectAssignment: React.FC<Props> = ({
               Neuen Seed generieren
             </button>
           </div>
-          <span className="text-muted mt-2 d-flex flex-wrap gap-2" style={{ marginBottom: '2px'}}>
+          <span
+            className="text-muted mt-2 d-flex flex-wrap gap-2"
+            style={{ marginBottom: "2px" }}
+          >
             Referenzen:
             <a
               href="https://en.wikipedia.org/wiki/Assignment_problem"

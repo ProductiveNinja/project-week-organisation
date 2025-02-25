@@ -12,7 +12,11 @@ type Props = {
 export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
   const exportGroupedByClass = () => {
     const groupedByClassList: {
-      [key: string]: Array<{ signup: StudentSignup; project: string }>;
+      [key: string]: Array<{
+        signup: StudentSignup;
+        project: string;
+        projectId: number;
+      }>;
     } = {};
 
     for (const { project, studentSignups } of assignments) {
@@ -27,19 +31,25 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
         groupedByClassList[linkedStudent.className].push({
           signup: studentSignup,
           project: `Projekt ${project.id} - ${project.title}`,
+          projectId: project.id,
         });
       }
     }
     const workbook = XLSX.utils.book_new();
 
-    for (const className in groupedByClassList) {
+    const sortedClassNames = Object.keys(groupedByClassList).sort();
+
+    for (const className of sortedClassNames) {
       const worksheetData = [
-        ["Vorname", "Nachname", "Projekt"],
-        ...groupedByClassList[className].map(({ signup, project }) => [
-          signup.linkedStudent?.firstName,
-          signup.linkedStudent?.lastName,
-          project,
-        ]),
+        ["Vorname", "Nachname", "Projekt", "Priorität"],
+        ...groupedByClassList[className].map(
+          ({ signup, project, projectId }) => [
+            signup.linkedStudent?.firstName,
+            signup.linkedStudent?.lastName,
+            project,
+            signup.projectsPriority.findIndex((p) => p.id === projectId) + 1,
+          ]
+        ),
       ];
 
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -84,7 +94,11 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
     const workbook = XLSX.utils.book_new();
 
     const groupedByProjectList: {
-      [key: string]: Array<{ signup: StudentSignup; project: string }>;
+      [key: string]: Array<{
+        signup: StudentSignup;
+        project: string;
+        projectId: number;
+      }>;
     } = {};
 
     for (const { project, studentSignups } of assignments) {
@@ -96,19 +110,23 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
         groupedByProjectList[project.id].push({
           signup: studentSignup,
           project: `Projekt ${project.id} - ${project.title}`,
+          projectId: project.id,
         });
       }
     }
 
     for (const projectId in groupedByProjectList) {
       const worksheetData = [
-        ["Klasse", "Vorname", "Nachname", "Projekt"],
-        ...groupedByProjectList[projectId].map(({ signup, project }) => [
-          signup.linkedStudent?.className,
-          signup.linkedStudent?.firstName,
-          signup.linkedStudent?.lastName,
-          project,
-        ]),
+        ["Klasse", "Vorname", "Nachname", "Projekt", "Priorität"],
+        ...groupedByProjectList[projectId].map(
+          ({ signup, project, projectId: pId }) => [
+            signup.linkedStudent?.className,
+            signup.linkedStudent?.firstName,
+            signup.linkedStudent?.lastName,
+            project,
+            signup.projectsPriority.findIndex((p) => p.id === pId) + 1,
+          ]
+        ),
       ];
 
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
