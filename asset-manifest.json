@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/project-week-organisation/static/css/main.3ccdec8b.css",
-    "main.js": "/project-week-organisation/static/js/main.58218f44.js",
+    "main.js": "/project-week-organisation/static/js/main.c693a81e.js",
     "static/media/bootstrap-icons.woff?": "/project-week-organisation/static/media/bootstrap-icons.39795c0b4513de014cf8.woff",
     "static/media/bootstrap-icons.woff2?": "/project-week-organisation/static/media/bootstrap-icons.b7bcc075b395c14ce8c2.woff2",
     "index.html": "/project-week-organisation/index.html",
     "main.3ccdec8b.css.map": "/project-week-organisation/static/css/main.3ccdec8b.css.map",
-    "main.58218f44.js.map": "/project-week-organisation/static/js/main.58218f44.js.map"
+    "main.c693a81e.js.map": "/project-week-organisation/static/js/main.c693a81e.js.map"
   },
   "entrypoints": [
     "static/css/main.3ccdec8b.css",
-    "static/js/main.58218f44.js"
+    "static/js/main.c693a81e.js"
   ]
 }
