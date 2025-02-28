@@ -180,11 +180,32 @@ export const Summary: React.FC<Props> = ({ assignments, downloadCallback }) => {
             <tbody>
               {assignments.map((assignment) => (
                 <tr key={assignment.project.id}>
-                  <td className="text-truncate" style={{ maxWidth: "600px" }}>
+                  <td
+                    className="text-truncate"
+                    style={{
+                      maxWidth: "600px",
+
+                      backgroundColor: assignment.project.cancelled
+                        ? "#ADADAD"
+                        : undefined,
+                      textDecoration: assignment.project.cancelled
+                        ? "line-through"
+                        : "none",
+                    }}
+                  >
                     <strong>Projekt {assignment.project.id}</strong> -{" "}
                     {assignment.project.title}
                   </td>
-                  <td>
+                  <td
+                    style={{
+                      backgroundColor: assignment.project.cancelled
+                        ? "#ADADAD"
+                        : undefined,
+                      textDecoration: assignment.project.cancelled
+                        ? "line-through"
+                        : "none",
+                    }}
+                  >
                     {assignment.studentSignups.length} /{" "}
                     {assignment.project.maxParticipants}
                   </td>

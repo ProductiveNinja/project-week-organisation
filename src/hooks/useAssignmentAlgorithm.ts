@@ -266,6 +266,19 @@ export const useAssignmentAlgorithm = (
           // This fallback assignment is considered prio 3.
         }
       }
+
+      // Next, try the student's fourth choice.
+      if (!assigned && student.projectsPriority.length > 3) {
+        const proj = student.projectsPriority[3];
+        const pa = projectAssignments.find((pa) => pa.project.id === proj.id);
+        if (pa && pa.studentSignups.length < pa.project.maxParticipants) {
+          pa.studentSignups.push(student);
+          assignedSignupIds.add(student.id);
+          assigned = true;
+          // This fallback assignment is considered prio 3.
+        }
+      }
+
       // Finally, if still not assigned, assign arbitrarily to any project.
       if (!assigned) {
         const shuffled = chanceInstance.shuffle(projectAssignments);
